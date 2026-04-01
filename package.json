@@ -1,0 +1,8 @@
+{
+  "name": "accom-manager",
+  "version": "1.0.0",
+  "description": "Accommodation Bed Management System",
+  "dependencies": {
+    "@netlify/blobs": "^7.0.0"
+  }
+}

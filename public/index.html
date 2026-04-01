@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accommodation Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ───────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0e14;--s1:#13161f;--s2:#1b1f2e;--s3:#242840;
+  --border:#2a2f45;--border2:#353c58;
+  --text:#dde3f5;--muted:#5a6282;--muted2:#7b849e;
+  --accent:#4f6ef7;--accent-glow:rgba(79,110,247,.18);
+  --green:#28d97c;--green-bg:rgba(40,217,124,.1);
+  --red:#f7515a;--red-bg:rgba(247,81,90,.1);
+  --yellow:#f5a623;--yellow-bg:rgba(245,166,35,.1);
+  --r:10px;--r-lg:16px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --t:0.18s ease;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+.app{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ────────────────────────────────────────── */
+.sidebar{
+  width:260px;flex-shrink:0;background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;z-index:50;
+}
+.sidebar-head{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent),#7c6af7);
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;
+}
+.logo h1{font-size:14px;font-weight:700;letter-spacing:-.2px;line-height:1.2}
+.logo p{font-size:11px;color:var(--muted2);margin-top:1px}
+.sidebar-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.s-stat{background:var(--s2);border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
+.s-stat-val{font-size:22px;font-weight:700;line-height:1}
+.s-stat-val.g{color:var(--green)}.s-stat-val.r{color:var(--red)}.s-stat-val.a{color:var(--accent)}
+.s-stat-lbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500;letter-spacing:.3px;text-transform:uppercase}
+.occ-bar-wrap{padding:0 20px 14px}
+.occ-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted2);margin-bottom:6px}
+.occ-bar-track{height:5px;background:var(--s3);border-radius:99px;overflow:hidden}
+.occ-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:99px;transition:width .5s ease}
+.nav-section{padding:12px 12px 4px}
+.nav-label{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.8px;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+.nav-btn{
+  width:100%;display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:8px;border:none;
+  background:transparent;color:var(--muted2);
+  font-size:13px;font-family:var(--font);font-weight:500;
+  cursor:pointer;text-align:left;transition:var(--t);margin-bottom:2px;
+}
+.nav-btn:hover{background:var(--s2);color:var(--text)}
+.nav-btn.active{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(79,110,247,.2)}
+.nav-btn .icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.apt-nav-list{padding:0 12px 12px}
+.apt-nav-item{
+  width:100%;display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:7px;border:none;
+  background:transparent;color:var(--muted2);
+  font-size:12px;font-family:var(--font);font-weight:500;
+  cursor:pointer;text-align:left;transition:var(--t);margin-bottom:1px;
+}
+.apt-nav-item:hover{background:var(--s2);color:var(--text)}
+.apt-nav-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.apt-nav-pct{margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--muted)}
+
+/* ── MAIN ───────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:14px 28px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:40;flex-wrap:wrap;
+}
+.topbar h2{font-size:16px;font-weight:700;flex:1;min-width:120px}
+.search-wrap{position:relative;width:260px}
+.search-wrap input{
+  width:100%;background:var(--s2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px 8px 34px;
+  color:var(--text);font-size:13px;font-family:var(--font);
+  outline:none;transition:border-color var(--t);
+}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.filter-tabs{display:flex;gap:4px;background:var(--s2);border-radius:8px;padding:3px;border:1px solid var(--border)}
+.ftab{
+  padding:5px 14px;border-radius:6px;border:none;
+  background:transparent;color:var(--muted2);
+  font-size:12px;font-family:var(--font);font-weight:600;cursor:pointer;transition:var(--t);
+}
+.ftab.active{background:var(--accent);color:#fff}
+.topbar-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--s2);color:var(--text);font-size:13px;
+  font-family:var(--font);font-weight:600;cursor:pointer;transition:var(--t);white-space:nowrap;
+}
+.topbar-btn:hover{border-color:var(--accent);color:var(--accent)}
+.topbar-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.topbar-btn.primary:hover{background:#3d5de6;border-color:#3d5de6;color:#fff}
+
+/* save indicator */
+.save-indicator{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;padding:6px 12px;
+  border-radius:7px;border:1px solid transparent;
+  transition:var(--t);white-space:nowrap;
+}
+.save-indicator.saved{color:var(--green);border-color:rgba(40,217,124,.2);background:var(--green-bg)}
+.save-indicator.saving{color:var(--accent);border-color:rgba(79,110,247,.2);background:var(--accent-glow)}
+.save-indicator.error{color:var(--red);border-color:rgba(247,81,90,.2);background:var(--red-bg)}
+.save-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.save-dot.pulse{animation:pulse 1s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.content{padding:24px 28px;flex:1}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center}
+.empty-state .big-icon{font-size:56px;margin-bottom:20px;opacity:.4}
+.empty-state h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.empty-state p{font-size:14px;color:var(--muted2);max-width:320px;line-height:1.6;margin-bottom:24px}
+
+/* ── APT CARDS ──────────────────────────────────────── */
+.apt-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:20px;overflow:hidden;transition:border-color var(--t)}
+.apt-card:hover{border-color:var(--border2)}
+.apt-card-head{padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.apt-card-head:hover{background:rgba(255,255,255,.02)}
+.apt-collapse-icon{color:var(--muted);font-size:12px;transition:transform var(--t);flex-shrink:0}
+.apt-card.collapsed .apt-collapse-icon{transform:rotate(-90deg)}
+.apt-card.collapsed .apt-body{display:none}
+.apt-name{font-size:15px;font-weight:700;flex:1;min-width:0}
+.apt-sub{font-size:11px;color:var(--muted2);margin-top:1px}
+.apt-head-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.badge{font-size:11px;padding:3px 10px;border-radius:99px;font-weight:600;white-space:nowrap}
+.badge-g{background:var(--green-bg);color:var(--green);border:1px solid rgba(40,217,124,.2)}
+.badge-r{background:var(--red-bg);color:var(--red);border:1px solid rgba(247,81,90,.2)}
+.apt-actions{display:flex;gap:6px}
+.icon-btn{
+  width:30px;height:30px;border-radius:7px;border:1px solid var(--border);
+  background:var(--s2);color:var(--muted2);font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.icon-btn.danger:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.apt-body{padding:16px}
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.room-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.room-head{padding:10px 14px;background:var(--s3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.room-head span{font-size:12px;font-weight:700;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase}
+.room-head-right{display:flex;align-items:center;gap:6px}
+.room-occ-lbl{font-size:11px;font-family:var(--mono);color:var(--muted)}
+.bed-list{padding:8px;display:flex;flex-direction:column;gap:3px}
+.bed-row{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:7px;border:1px solid transparent;
+  cursor:pointer;transition:var(--t);
+}
+.bed-row:hover{background:var(--s3);border-color:var(--border)}
+.bed-row.occ:hover{border-color:rgba(40,217,124,.25)}
+.bed-row.vac:hover{border-color:rgba(247,81,90,.25)}
+.bed-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bed-dot.occ{background:var(--green);box-shadow:0 0 7px rgba(40,217,124,.5)}
+.bed-dot.vac{background:var(--red)}
+.bed-no{font-size:11px;font-weight:600;font-family:var(--mono);color:var(--muted);width:56px;flex-shrink:0}
+.bed-info{flex:1;min-width:0}
+.bed-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bed-role{font-size:11px;color:var(--muted2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bed-id-tag{font-size:10px;font-family:var(--mono);background:var(--accent-glow);color:var(--accent);padding:2px 7px;border-radius:5px;flex-shrink:0;border:1px solid rgba(79,110,247,.15)}
+.bed-empty-tag{font-size:11px;color:var(--muted);font-style:italic}
+.add-bed-btn{
+  width:calc(100% - 16px);display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px;border-radius:7px;border:1px dashed var(--border);
+  background:transparent;color:var(--muted);font-size:12px;
+  font-family:var(--font);cursor:pointer;transition:var(--t);margin:4px 8px 8px;
+}
+.add-bed-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.add-room-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 14px;border-radius:8px;border:1px dashed var(--border);
+  background:transparent;color:var(--muted);font-size:13px;
+  font-family:var(--font);cursor:pointer;transition:var(--t);
+  margin-top:12px;width:100%;justify-content:center;
+}
+.add-room-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+
+/* ── MODAL ──────────────────────────────────────────── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(6px);animation:fadeIn .15s ease}
+.overlay.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-lg);width:520px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7);animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s1);z-index:2}
+.modal-head h3{font-size:15px;font-weight:700}
+.modal-close{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--s2);color:var(--muted2);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.modal-close:hover{background:var(--s3);color:var(--text)}
+.modal-body{padding:22px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted2);margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase}
+.form-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border-color var(--t)}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--muted)}
+.form-select{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;cursor:pointer;transition:border-color var(--t)}
+.form-select:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-check{display:flex;align-items:center;gap:8px;background:var(--s2);border-radius:7px;padding:9px 12px;border:1px solid var(--border);cursor:pointer;transition:var(--t)}
+.form-check:hover{border-color:var(--border2)}
+.form-check input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+.form-check label{font-size:13px;cursor:pointer;user-select:none}
+.modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--s1)}
+.btn{padding:9px 20px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:var(--font);font-weight:600;cursor:pointer;transition:var(--t)}
+.btn-ghost{background:transparent;color:var(--muted2)}.btn-ghost:hover{background:var(--s2);color:var(--text)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn-primary:hover{background:#3d5de6}
+.btn-danger{background:var(--red-bg);border-color:rgba(247,81,90,.3);color:var(--red)}.btn-danger:hover{background:rgba(247,81,90,.2)}
+
+/* detail modal */
+.detail-status{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:18px}
+.detail-status.occ{background:var(--green-bg);color:var(--green);border:1px solid rgba(40,217,124,.25)}
+.detail-status.vac{background:var(--red-bg);color:var(--red);border:1px solid rgba(247,81,90,.25)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.info-cell{background:var(--s2);border-radius:8px;padding:12px 14px;border:1px solid var(--border)}
+.info-cell .lbl{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.info-cell .val{font-size:14px;font-weight:600;word-break:break-word}
+.equip-section{margin-bottom:18px}
+.equip-title{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+.equip-chips{display:flex;flex-wrap:wrap;gap:7px}
+.equip-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid transparent}
+.equip-chip.yes{background:var(--green-bg);color:var(--green);border-color:rgba(40,217,124,.2)}
+.equip-chip.no{background:var(--s2);color:var(--muted);border-color:var(--border)}
+.note{background:var(--yellow-bg);border:1px solid rgba(245,166,35,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--yellow);display:flex;gap:8px;align-items:flex-start;margin-bottom:16px}
+
+/* loading screen */
+.loading-screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:999;gap:16px;
+}
+.spinner{
+  width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-screen p{font-size:14px;color:var(--muted2)}
+
+/* data view */
+.data-section{max-width:600px}
+.data-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 24px;margin-bottom:16px}
+.data-card h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.data-card p{font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.6}
+.data-card textarea{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:12px;font-family:var(--mono);outline:none;resize:vertical;min-height:120px;transition:border-color var(--t)}
+.data-card textarea:focus{border-color:var(--accent)}
+
+/* no results */
+.no-results{text-align:center;padding:40px 20px;color:var(--muted)}
+.no-results .nr-icon{font-size:36px;margin-bottom:10px;opacity:.4}
+
+@media(max-width:680px){
+  .sidebar{display:none}.rooms-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}
+  .topbar{padding:12px 14px;gap:8px}
+  .content{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <p>Loading accommodation data…</p>
+</div>
+
+<div class="app" id="appRoot" style="display:none">
+
+<!-- ── SIDEBAR ─────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo">
+      <div class="logo-mark">🏨</div>
+      <div>
+        <h1>AccomManager</h1>
+        <p>Bed Assignment System</p>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-stats">
+    <div class="s-stat"><div class="s-stat-val" id="sb-total">0</div><div class="s-stat-lbl">Total</div></div>
+    <div class="s-stat"><div class="s-stat-val g" id="sb-occ">0</div><div class="s-stat-lbl">Occupied</div></div>
+    <div class="s-stat"><div class="s-stat-val r" id="sb-avail">0</div><div class="s-stat-lbl">Free</div></div>
+    <div class="s-stat"><div class="s-stat-val a" id="sb-apts">0</div><div class="s-stat-lbl">Apts</div></div>
+  </div>
+  <div class="occ-bar-wrap">
+    <div class="occ-bar-label"><span>Occupancy</span><span id="sb-pct">0%</span></div>
+    <div class="occ-bar-track"><div class="occ-bar-fill" id="occ-bar" style="width:0%"></div></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Views</div>
+    <button class="nav-btn active" id="nav-dashboard" onclick="switchView('dashboard')">
+      <span class="icon">🏠</span> Dashboard
+    </button>
+    <button class="nav-btn" id="nav-data" onclick="switchView('data')">
+      <span class="icon">💾</span> Export / Import
+    </button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Apartments <span id="apt-count-label"></span></div>
+  </div>
+  <div class="apt-nav-list" id="aptNavList"></div>
+</aside>
+
+<!-- ── MAIN ────────────────────────────────────── -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="topbar-title">Dashboard</h2>
+    <div class="search-wrap" id="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search name, ID, role…">
+    </div>
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="ftab active" onclick="setFilter('all',event)">All</button>
+      <button class="ftab" onclick="setFilter('occupied',event)">Occupied</button>
+      <button class="ftab" onclick="setFilter('vacant',event)">Free</button>
+    </div>
+    <div class="save-indicator saved" id="saveIndicator">
+      <div class="save-dot" id="saveDot"></div>
+      <span id="saveLabel">All saved</span>
+    </div>
+    <button class="topbar-btn primary" onclick="openAptModal()">+ Add Apartment</button>
+  </div>
+  <div class="content" id="mainContent"></div>
+</div>
+
+</div><!-- /app -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Apartment -->
+<div class="overlay hidden" id="aptOverlay">
+  <div class="modal" style="width:460px">
+    <div class="modal-head">
+      <h3 id="aptModalTitle">Add Apartment</h3>
+      <button class="modal-close" onclick="closeModal('aptOverlay')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Apartment / Property Name *</label><input class="form-input" id="apt-name" placeholder="e.g. Rest Point (Mechanics)"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="apt-loc" placeholder="e.g. Male'"></div>
+        <div class="form-group"><label class="form-label">Address (optional)</label><input class="form-input" id="apt-addr" placeholder="Flat / street no."></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes / Remarks</label><input class="form-input" id="apt-notes" placeholder="Any maintenance notes…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('aptOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApt()">Save Apartment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Room -->
+<div class="overlay hidden" id="roomOverlay">
+  <div class="modal" style="width:400px">
+    <div class="modal-head">
+      <h3 id="roomModalTitle">Add Room</h3>
+      <button class="modal-close" onclick="closeModal('roomOverlay')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Room Name *</label><input class="form-input" id="room-name" placeholder="e.g. Room 1, Ground Floor…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('roomOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRoom()">Save Room</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bed -->
+<div class="overlay hidden" id="bedOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="bedModalTitle">Add Bed</h3>
+      <button class="modal-close" onclick="closeModal('bedOverlay')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Bed Number / Label *</label><input class="form-input" id="bed-no" placeholder="e.g. R1B1"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="bed-status" onchange="toggleStaffFields()">
+            <option value="vacant">Vacant</option>
+            <option value="occupied">Occupied</option>
+          </select>
+        </div>
+      </div>
+      <div id="bed-staff-section" style="opacity:.4;transition:.2s">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Staff Name</label><input class="form-input" id="bed-staff-name" placeholder="Full name"></div>
+          <div class="form-group"><label class="form-label">Staff ID</label><input class="form-input" id="bed-staff-id" placeholder="e.g. 11234" style="font-family:var(--mono)"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Designation / Role</label><input class="form-input" id="bed-staff-role" placeholder="e.g. Mechanic Grade 2"></div>
+          <div class="form-group"><label class="form-label">Department</label><input class="form-input" id="bed-staff-dept" placeholder="e.g. Engineering"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Equipment / Items Provided</label>
+        <div class="form-check-grid" id="equip-checks"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Remarks</label><input class="form-input" id="bed-remarks" placeholder="Any notes…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('bedOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBed()">Save Bed</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bed Detail -->
+<div class="overlay hidden" id="detailOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="detailTitle">Bed Detail</h3>
+      <button class="modal-close" onclick="closeModal('detailOverlay')">×</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer" id="detailFooter"></div>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div class="overlay hidden" id="confirmOverlay">
+  <div class="modal" style="width:380px">
+    <div class="modal-head">
+      <h3>Confirm Delete</h3>
+      <button class="modal-close" onclick="closeModal('confirmOverlay')">×</button>
+    </div>
+    <div class="modal-body"><p id="confirmMsg" style="font-size:14px;color:var(--muted2);line-height:1.6"></p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════
+const API = {
+  get:  '/api/getData',
+  save: '/api/saveData',
+};
+const EQUIP_LIST = ['Bed Sheet','Mattress','Pillow','Pillow Cover','Locker','Fan','Key Card','Apt Key'];
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let state = [];
+let _ctx = {};
+let _filter = 'all';
+let _search = '';
+let _view = 'dashboard';
+let _saveTimer = null;
+
+// uid
+let _uid = Date.now();
+const uid = () => (++_uid).toString(36);
+
+// ══════════════════════════════════════════════════════
+//  API — LOAD & SAVE
+// ══════════════════════════════════════════════════════
+async function loadFromServer() {
+  try {
+    const res = await fetch(API.get);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    state = await res.json();
+  } catch (err) {
+    console.error('Load failed:', err);
+    showToast('Could not load data from server', 'red');
+    state = [];
+  }
+}
+
+async function saveToServer() {
+  setSaveState('saving');
+  try {
+    const res = await fetch(API.save, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    setSaveState('saved');
+  } catch (err) {
+    console.error('Save failed:', err);
+    setSaveState('error');
+    showToast('Save failed — check your connection', 'red');
+  }
+}
+
+// debounced save — waits 800ms after last change before hitting the API
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  setSaveState('saving');
+  _saveTimer = setTimeout(() => saveToServer(), 800);
+}
+
+function setSaveState(s) {
+  const ind = document.getElementById('saveIndicator');
+  const dot = document.getElementById('saveDot');
+  const lbl = document.getElementById('saveLabel');
+  ind.className = 'save-indicator ' + s;
+  if (s === 'saving') { dot.className = 'save-dot pulse'; lbl.textContent = 'Saving…'; }
+  else if (s === 'saved') { dot.className = 'save-dot'; lbl.textContent = 'All saved'; }
+  else { dot.className = 'save-dot'; lbl.textContent = 'Save failed'; }
+}
+
+// ══════════════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════════════
+function calcStats() {
+  let total=0, occ=0;
+  state.forEach(a => a.rooms.forEach(r => r.beds.forEach(b => { total++; if(b.status==='occupied') occ++; })));
+  return { total, occ, avail: total-occ, apts: state.length, pct: total>0 ? Math.round(occ/total*100) : 0 };
+}
+
+function refreshStats() {
+  const s = calcStats();
+  document.getElementById('sb-total').textContent = s.total;
+  document.getElementById('sb-occ').textContent   = s.occ;
+  document.getElementById('sb-avail').textContent = s.avail;
+  document.getElementById('sb-apts').textContent  = s.apts;
+  document.getElementById('sb-pct').textContent   = s.pct + '%';
+  document.getElementById('occ-bar').style.width  = s.pct + '%';
+  document.getElementById('apt-count-label').textContent = `(${s.apts})`;
+}
+
+// ══════════════════════════════════════════════════════
+//  VIEWS
+// ══════════════════════════════════════════════════════
+function switchView(v) {
+  _view = v;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-'+v).classList.add('active');
+  const dash = v === 'dashboard';
+  document.getElementById('search-wrap').style.display  = dash ? '' : 'none';
+  document.getElementById('filter-tabs').style.display  = dash ? '' : 'none';
+  document.getElementById('topbar-title').textContent   = dash ? 'Dashboard' : 'Export / Import Data';
+  renderContent();
+}
+
+function setFilter(f, ev) {
+  _filter = f;
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+  if (ev && ev.target) ev.target.classList.add('active');
+  renderContent();
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  _search = e.target.value.toLowerCase().trim();
+  renderContent();
+});
+
+// ══════════════════════════════════════════════════════
+//  SIDEBAR NAV
+// ══════════════════════════════════════════════════════
+function renderSidebarNav() {
+  const list = document.getElementById('aptNavList');
+  if (!state.length) { list.innerHTML = '<div style="padding:0 8px 8px;font-size:12px;color:var(--muted)">No apartments yet</div>'; return; }
+  list.innerHTML = state.map(apt => {
+    const total = apt.rooms.reduce((s,r)=>s+r.beds.length,0);
+    const occ   = apt.rooms.reduce((s,r)=>s+r.beds.filter(b=>b.status==='occupied').length,0);
+    const pct   = total>0 ? Math.round(occ/total*100) : 0;
+    return `<button class="apt-nav-item" onclick="scrollToApt('${apt.id}')">
+      <div class="apt-nav-dot"></div>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(apt.name)}</span>
+      <span class="apt-nav-pct">${pct}%</span>
+    </button>`;
+  }).join('');
+}
+
+function scrollToApt(id) {
+  if (_view !== 'dashboard') { switchView('dashboard'); }
+  setTimeout(() => { const el = document.getElementById('apt-'+id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER DASHBOARD
+// ══════════════════════════════════════════════════════
+function renderDashboard() {
+  const cont = document.getElementById('mainContent');
+  if (!state.length) {
+    cont.innerHTML = `<div class="empty-state">
+      <div class="big-icon">🏨</div>
+      <h3>No Apartments Yet</h3>
+      <p>Add your first apartment to start managing bed assignments.</p>
+      <button class="topbar-btn primary" onclick="openAptModal()" style="font-size:14px;padding:11px 22px">+ Add First Apartment</button>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+  state.forEach(apt => {
+    const total = apt.rooms.reduce((s,r)=>s+r.beds.length,0);
+    const occ   = apt.rooms.reduce((s,r)=>s+r.beds.filter(b=>b.status==='occupied').length,0);
+    const avail = total - occ;
+
+    let roomsHtml = '';
+    apt.rooms.forEach(room => {
+      let bedRows = '';
+      let roomOcc = 0;
+      room.beds.forEach(bed => {
+        const isOcc = bed.status === 'occupied';
+        if (isOcc) roomOcc++;
+        if (_filter === 'occupied' && !isOcc) return;
+        if (_filter === 'vacant'   && isOcc)  return;
+        if (_search) {
+          const hay = [bed.staffName||'',bed.staffId||'',bed.role||'',bed.dept||'',bed.bedNo||''].join(' ').toLowerCase();
+          if (!hay.includes(_search)) return;
+        }
+        bedRows += `<div class="bed-row ${isOcc?'occ':'vac'}" onclick="openBedDetail('${apt.id}','${room.id}','${bed.id}')">
+          <div class="bed-dot ${isOcc?'occ':'vac'}"></div>
+          <div class="bed-no">${esc(bed.bedNo)}</div>
+          <div class="bed-info">
+            ${isOcc
+              ? `<div class="bed-name">${esc(bed.staffName||'—')}</div><div class="bed-role">${esc(bed.role||'No role')}</div>`
+              : `<div class="bed-empty-tag">Available</div>`}
+          </div>
+          ${isOcc && bed.staffId ? `<div class="bed-id-tag">#${esc(bed.staffId)}</div>` : ''}
+        </div>`;
+      });
+
+      roomsHtml += `<div class="room-card">
+        <div class="room-head">
+          <span>${esc(room.name)}</span>
+          <div class="room-head-right">
+            <span class="room-occ-lbl">${roomOcc}/${room.beds.length}</span>
+            <button class="icon-btn" title="Edit room" onclick="openRoomModal('${apt.id}','${room.id}',event)">✏️</button>
+            <button class="icon-btn danger" title="Delete room" onclick="deleteRoom('${apt.id}','${room.id}',event)">🗑</button>
+          </div>
+        </div>
+        <div class="bed-list">
+          ${bedRows || `<div class="no-results"><div class="nr-icon">🛏</div><div style="font-size:12px">No matching beds</div></div>`}
+        </div>
+        <button class="add-bed-btn" onclick="openBedModal('${apt.id}','${room.id}')">+ Add Bed</button>
+      </div>`;
+    });
+
+    html += `<div class="apt-card" id="apt-${apt.id}">
+      <div class="apt-card-head" onclick="toggleApt('${apt.id}')">
+        <span class="apt-collapse-icon">▼</span>
+        <div style="flex:1;min-width:0">
+          <div class="apt-name">${esc(apt.name)}</div>
+          ${apt.location||apt.address ? `<div class="apt-sub">📍 ${esc([apt.location,apt.address].filter(Boolean).join(' · '))}</div>` : ''}
+        </div>
+        <div class="apt-head-right">
+          <span class="badge badge-g">✓ ${occ} occ</span>
+          <span class="badge badge-r">○ ${avail} free</span>
+          <div class="apt-actions" onclick="event.stopPropagation()">
+            <button class="icon-btn" title="Edit apartment"  onclick="openAptModal('${apt.id}')">✏️</button>
+            <button class="icon-btn" title="Add room"        onclick="openRoomModal('${apt.id}',null,event)">+🚪</button>
+            <button class="icon-btn danger" title="Delete apartment" onclick="deleteApt('${apt.id}')">🗑</button>
+          </div>
+        </div>
+      </div>
+      <div class="apt-body">
+        ${apt.notes ? `<div class="note">⚠️ <span>${esc(apt.notes)}</span></div>` : ''}
+        ${apt.rooms.length === 0
+          ? `<div class="empty-state" style="padding:40px 20px">
+               <div class="big-icon" style="font-size:36px">🚪</div>
+               <p>No rooms yet. <a href="#" onclick="openRoomModal('${apt.id}',null,event);return false" style="color:var(--accent)">Add a room</a> to start.</p>
+             </div>`
+          : `<div class="rooms-grid">${roomsHtml}</div>
+             <button class="add-room-btn" onclick="openRoomModal('${apt.id}',null,event)">+ Add Room</button>`
+        }
+      </div>
+    </div>`;
+  });
+
+  cont.innerHTML = html;
+}
+
+function toggleApt(id) {
+  const el = document.getElementById('apt-'+id);
+  if (el) el.classList.toggle('collapsed');
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER DATA VIEW
+// ══════════════════════════════════════════════════════
+function renderDataView() {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="data-section">
+      <div class="data-card">
+        <h3>📤 Export Data</h3>
+        <p>Download a backup of all your data as a JSON file.</p>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="downloadJSON()">⬇ Download JSON</button>
+          <button class="btn btn-ghost" onclick="copyJSON()">📋 Copy to Clipboard</button>
+        </div>
+      </div>
+      <div class="data-card">
+        <h3>📥 Import Data</h3>
+        <p>Paste a previously exported JSON below. <strong style="color:var(--red)">This will overwrite all current data.</strong></p>
+        <textarea id="import-json" placeholder="Paste JSON here…"></textarea>
+        <div style="margin-top:12px">
+          <button class="btn btn-danger" onclick="importJSON()">⚠ Import & Overwrite</button>
+        </div>
+      </div>
+      <div class="data-card">
+        <h3>🗑 Reset All Data</h3>
+        <p>Clear everything and start from scratch. Data is also deleted from the server.</p>
+        <button class="btn btn-danger" onclick="resetAll()">Reset All Data</button>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  MASTER RENDER
+// ══════════════════════════════════════════════════════
+function render() {
+  refreshStats();
+  renderSidebarNav();
+  renderContent();
+}
+function renderContent() {
+  if (_view === 'dashboard') renderDashboard();
+  else renderDataView();
+}
+
+// ══════════════════════════════════════════════════════
+//  APARTMENT CRUD
+// ══════════════════════════════════════════════════════
+function openAptModal(aptId) {
+  _ctx.editAptId = aptId || null;
+  const apt = aptId ? state.find(a=>a.id===aptId) : null;
+  document.getElementById('aptModalTitle').textContent = aptId ? 'Edit Apartment' : 'Add Apartment';
+  document.getElementById('apt-name').value  = apt?.name     || '';
+  document.getElementById('apt-loc').value   = apt?.location || '';
+  document.getElementById('apt-addr').value  = apt?.address  || '';
+  document.getElementById('apt-notes').value = apt?.notes    || '';
+  openModal('aptOverlay');
+}
+
+function saveApt() {
+  const name = document.getElementById('apt-name').value.trim();
+  if (!name) { alert('Apartment name is required.'); return; }
+  if (_ctx.editAptId) {
+    const apt = state.find(a=>a.id===_ctx.editAptId);
+    apt.name = name;
+    apt.location = document.getElementById('apt-loc').value.trim();
+    apt.address  = document.getElementById('apt-addr').value.trim();
+    apt.notes    = document.getElementById('apt-notes').value.trim();
+  } else {
+    state.push({ id: uid(), name,
+      location: document.getElementById('apt-loc').value.trim(),
+      address:  document.getElementById('apt-addr').value.trim(),
+      notes:    document.getElementById('apt-notes').value.trim(),
+      rooms: []
+    });
+  }
+  closeModal('aptOverlay'); scheduleSave(); render();
+}
+
+function deleteApt(id) {
+  const apt = state.find(a=>a.id===id);
+  showConfirm(`Delete apartment "${apt.name}" and all its rooms and beds?`, () => {
+    state = state.filter(a=>a.id!==id);
+    scheduleSave(); render();
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  ROOM CRUD
+// ══════════════════════════════════════════════════════
+function openRoomModal(aptId, roomId, ev) {
+  if (ev) ev.stopPropagation();
+  _ctx.editAptId  = aptId;
+  _ctx.editRoomId = roomId || null;
+  const apt  = state.find(a=>a.id===aptId);
+  const room = roomId ? apt.rooms.find(r=>r.id===roomId) : null;
+  document.getElementById('roomModalTitle').textContent = roomId ? 'Edit Room' : 'Add Room';
+  document.getElementById('room-name').value = room?.name || '';
+  openModal('roomOverlay');
+}
+
+function saveRoom() {
+  const name = document.getElementById('room-name').value.trim();
+  if (!name) { alert('Room name is required.'); return; }
+  const apt = state.find(a=>a.id===_ctx.editAptId);
+  if (_ctx.editRoomId) {
+    apt.rooms.find(r=>r.id===_ctx.editRoomId).name = name;
+  } else {
+    apt.rooms.push({ id: uid(), name, beds: [] });
+  }
+  closeModal('roomOverlay'); scheduleSave(); render();
+}
+
+function deleteRoom(aptId, roomId, ev) {
+  if (ev) ev.stopPropagation();
+  const apt  = state.find(a=>a.id===aptId);
+  const room = apt.rooms.find(r=>r.id===roomId);
+  showConfirm(`Delete room "${room.name}" and all its beds?`, () => {
+    apt.rooms = apt.rooms.filter(r=>r.id!==roomId);
+    scheduleSave(); render();
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  BED CRUD
+// ══════════════════════════════════════════════════════
+function openBedModal(aptId, roomId, bedId) {
+  _ctx.editAptId  = aptId;
+  _ctx.editRoomId = roomId;
+  _ctx.editBedId  = bedId || null;
+  const apt  = state.find(a=>a.id===aptId);
+  const room = apt.rooms.find(r=>r.id===roomId);
+  const bed  = bedId ? room.beds.find(b=>b.id===bedId) : null;
+  document.getElementById('bedModalTitle').textContent    = bedId ? 'Edit Bed' : 'Add Bed';
+  document.getElementById('bed-no').value                 = bed?.bedNo     || '';
+  document.getElementById('bed-status').value             = bed?.status    || 'vacant';
+  document.getElementById('bed-staff-name').value         = bed?.staffName || '';
+  document.getElementById('bed-staff-id').value           = bed?.staffId   || '';
+  document.getElementById('bed-staff-role').value         = bed?.role      || '';
+  document.getElementById('bed-staff-dept').value         = bed?.dept      || '';
+  document.getElementById('bed-remarks').value            = bed?.remarks   || '';
+  const ec = document.getElementById('equip-checks');
+  ec.innerHTML = EQUIP_LIST.map(item => {
+    const key = item.replace(/\s+/g,'_');
+    return `<label class="form-check">
+      <input type="checkbox" id="eq-${key}" ${bed?.equip?.[key] ? 'checked' : ''}>
+      <label for="eq-${key}">${item}</label>
+    </label>`;
+  }).join('');
+  toggleStaffFields();
+  openModal('bedOverlay');
+}
+
+function toggleStaffFields() {
+  const occ = document.getElementById('bed-status').value === 'occupied';
+  document.getElementById('bed-staff-section').style.opacity = occ ? '1' : '0.4';
+}
+
+function saveBed() {
+  const bedNo = document.getElementById('bed-no').value.trim();
+  if (!bedNo) { alert('Bed number is required.'); return; }
+  const equip = {};
+  EQUIP_LIST.forEach(item => { const k=item.replace(/\s+/g,'_'); equip[k]=document.getElementById('eq-'+k)?.checked||false; });
+  const apt  = state.find(a=>a.id===_ctx.editAptId);
+  const room = apt.rooms.find(r=>r.id===_ctx.editRoomId);
+  const data = {
+    bedNo, equip,
+    status:    document.getElementById('bed-status').value,
+    staffName: document.getElementById('bed-staff-name').value.trim(),
+    staffId:   document.getElementById('bed-staff-id').value.trim(),
+    role:      document.getElementById('bed-staff-role').value.trim(),
+    dept:      document.getElementById('bed-staff-dept').value.trim(),
+    remarks:   document.getElementById('bed-remarks').value.trim(),
+  };
+  if (_ctx.editBedId) {
+    const i = room.beds.findIndex(b=>b.id===_ctx.editBedId);
+    room.beds[i] = { ...room.beds[i], ...data };
+  } else {
+    room.beds.push({ id: uid(), ...data });
+  }
+  closeModal('bedOverlay'); scheduleSave(); render();
+}
+
+function deleteBed(aptId, roomId, bedId) {
+  const apt  = state.find(a=>a.id===aptId);
+  const room = apt.rooms.find(r=>r.id===roomId);
+  const bed  = room.beds.find(b=>b.id===bedId);
+  showConfirm(`Delete bed "${bed.bedNo}"?`, () => {
+    room.beds = room.beds.filter(b=>b.id!==bedId);
+    scheduleSave(); closeModal('detailOverlay'); render();
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  BED DETAIL
+// ══════════════════════════════════════════════════════
+function openBedDetail(aptId, roomId, bedId) {
+  const apt  = state.find(a=>a.id===aptId);
+  const room = apt.rooms.find(r=>r.id===roomId);
+  const bed  = room.beds.find(b=>b.id===bedId);
+  const occ  = bed.status === 'occupied';
+  document.getElementById('detailTitle').textContent = `${bed.bedNo} — ${apt.name}`;
+  const equipHtml = EQUIP_LIST.map(item => {
+    const k = item.replace(/\s+/g,'_');
+    const has = bed.equip?.[k];
+    return `<span class="equip-chip ${has?'yes':'no'}">${has?'✓':'✗'} ${item}</span>`;
+  }).join('');
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-status ${occ?'occ':'vac'}">${occ?'🟢 Occupied':'🔴 Available'}</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="lbl">Bed No</div><div class="val">${esc(bed.bedNo)}</div></div>
+      <div class="info-cell"><div class="lbl">Room</div><div class="val">${esc(room.name)}</div></div>
+      <div class="info-cell"><div class="lbl">Staff Name</div><div class="val">${esc(bed.staffName||'—')}</div></div>
+      <div class="info-cell"><div class="lbl">Staff ID</div><div class="val" style="font-family:var(--mono)">${esc(bed.staffId||'—')}</div></div>
+      <div class="info-cell"><div class="lbl">Designation</div><div class="val">${esc(bed.role||'—')}</div></div>
+      <div class="info-cell"><div class="lbl">Department</div><div class="val">${esc(bed.dept||'—')}</div></div>
+      ${bed.remarks?`<div class="info-cell" style="grid-column:span 2"><div class="lbl">Remarks</div><div class="val" style="color:var(--yellow)">${esc(bed.remarks)}</div></div>`:''}
+    </div>
+    <div class="equip-section">
+      <div class="equip-title">Equipment / Items</div>
+      <div class="equip-chips">${equipHtml}</div>
+    </div>`;
+  document.getElementById('detailFooter').innerHTML = `
+    <button class="btn btn-danger" onclick="deleteBed('${aptId}','${roomId}','${bedId}')">🗑 Delete</button>
+    <button class="btn btn-ghost" onclick="closeModal('detailOverlay')">Close</button>
+    <button class="btn btn-primary" onclick="closeModal('detailOverlay');openBedModal('${aptId}','${roomId}','${bedId}')">✏️ Edit Bed</button>`;
+  openModal('detailOverlay');
+}
+
+// ══════════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ══════════════════════════════════════════════════════
+function downloadJSON() {
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'accommodation_data_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+function copyJSON() {
+  navigator.clipboard.writeText(JSON.stringify(state,null,2));
+  showToast('Copied to clipboard!');
+}
+async function importJSON() {
+  const raw = document.getElementById('import-json').value.trim();
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error('Must be an array');
+    state = parsed;
+    await saveToServer();
+    render();
+    showToast('Data imported and saved!', 'green');
+  } catch(e) {
+    showToast('Invalid JSON: '+e.message, 'red');
+  }
+}
+function resetAll() {
+  showConfirm('This will permanently delete ALL data on the server. Are you sure?', async () => {
+    state = [];
+    await saveToServer();
+    render();
+    showToast('All data reset.','red');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    ['aptOverlay','roomOverlay','bedOverlay','detailOverlay','confirmOverlay'].forEach(id => closeModal(id));
+});
+['aptOverlay','roomOverlay','bedOverlay','detailOverlay','confirmOverlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e){ if(e.target===this) closeModal(id); });
+});
+
+function showConfirm(msg, cb) {
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmOkBtn').onclick = () => { closeModal('confirmOverlay'); cb(); };
+  openModal('confirmOverlay');
+}
+
+// ══════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════
+function showToast(msg, type='green') {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;
+    padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;font-family:var(--font);
+    background:${type==='green'?'var(--green-bg)':type==='red'?'var(--red-bg)':'var(--s3)'};
+    color:${type==='green'?'var(--green)':type==='red'?'var(--red)':'var(--text)'};
+    border:1px solid ${type==='green'?'rgba(40,217,124,.3)':type==='red'?'rgba(247,81,90,.3)':'var(--border)'};
+    box-shadow:0 8px 24px rgba(0,0,0,.5);animation:slideUp .2s ease;pointer-events:none;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ══════════════════════════════════════════════════════
+//  UTIL
+// ══════════════════════════════════════════════════════
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+(async function init() {
+  await loadFromServer();
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'flex';
+  render();
+})();
+</script>
+</body>
+</html>
